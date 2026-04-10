@@ -38,10 +38,10 @@ export default async function BlogPostPage({ params }: { params: { id: string } 
   }
 
   return (
-    <main className="min-h-dvh bg-bg text-fg">
+    <main className="min-h-dvh text-fg">
       <Navbar />
 
-      <section className="bg-bg section" style={{ scrollMarginTop: 88 }}>
+      <section className="section-frosted section" style={{ scrollMarginTop: 88 }}>
         <div className="container-page">
           {post ? (
             <article className="card p-8">

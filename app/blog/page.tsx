@@ -37,10 +37,10 @@ export default async function BlogPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-bg text-fg">
+    <main className="min-h-dvh text-fg">
       <Navbar />
 
-      <section className="bg-bg section" style={{ scrollMarginTop: 88 }}>
+      <section className="section-frosted section" style={{ scrollMarginTop: 88 }}>
         <div className="container-page">
           <h1 className="text-4xl font-bold tracking-tight">Dev Log</h1>
           <p className="mt-2 text-fg-muted">Published posts from Supabase.</p>

@@ -15,6 +15,35 @@ body {
   overflow-x: hidden;
 }
 
+/* Cursor-follow spotlight: fixed z-0 behind page. Smaller circles = tighter follow. */
+.cursor-glow-layer {
+  --glow-x: 50%;
+  --glow-y: 50%;
+  background:
+    radial-gradient(
+      320px circle at var(--glow-x) var(--glow-y),
+      rgba(129, 140, 248, 0.32),
+      rgba(99, 102, 241, 0.12) 42%,
+      transparent 68%
+    ),
+    radial-gradient(
+      520px circle at var(--glow-x) var(--glow-y),
+      rgba(99, 102, 241, 0.08),
+      transparent 58%
+    );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-glow-layer {
+    opacity: 0.55;
+  }
+}
+
+/* Semi-transparent sections (no backdrop-filter) so the fixed glow composites on every scroll position */
+.section-frosted {
+  background-color: rgba(10, 10, 10, 0.58);
+}
+
 ::selection {
   background: rgba(99, 102, 241, 0.28);
 }
@@ -23,8 +52,41 @@ body {
   @apply mx-auto w-full max-w-6xl px-5;
 }
 
+/* Metallic tile: projects, blog, stats, footer cards */
 .card {
-  @apply rounded-2xl border border-border bg-bg-card/70 backdrop-blur;
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(
+      152deg,
+      rgba(255, 255, 255, 0.12) 0%,
+      rgba(255, 255, 255, 0.04) 18%,
+      rgba(255, 255, 255, 0.02) 35%,
+      rgba(28, 28, 32, 0.88) 52%,
+      rgba(10, 10, 12, 0.96) 100%
+    ),
+    linear-gradient(105deg, #1a1a1e 0%, #121214 40%, #18181c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 10px 36px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    125deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.04) 48%,
+    transparent 56%
+  );
+  opacity: 0.85;
 }
 
 .section {
@@ -52,7 +114,16 @@ body {
 }
 
 .tag {
-  @apply inline-flex items-center rounded-full border border-border bg-white/5 px-3 py-1 text-xs font-medium text-fg;
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-fg;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.03) 45%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .piano {

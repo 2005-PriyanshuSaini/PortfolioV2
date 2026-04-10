@@ -26,19 +26,20 @@ function MailIcon(props: React.SVGProps<SVGSVGElement>) {
 export default function Hero() {
   const linkedInUrl = getLinkedInUrl();
   const contactEmail = getContactEmail();
+  const [photoOk, setPhotoOk] = React.useState(true);
 
   return (
     <section
       id="home"
-      className="relative flex min-h-[100dvh] items-center bg-bg"
+      className="relative flex min-h-[100dvh] items-center"
       style={{ scrollMarginTop: 80 }}
     >
-      <div className="container-page section flex w-full flex-col items-start justify-center">
+      <div className="container-page section relative z-[1] flex w-full flex-col items-start gap-10 lg:flex-row lg:items-center lg:justify-between lg:gap-14">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
-          className="w-full"
+          className="w-full min-w-0 lg:max-w-xl lg:flex-1"
         >
           <p className="text-sm font-semibold text-accent/90">Full Stack • AI • Product</p>
           <h1 className="mt-4 text-5xl font-bold tracking-tight text-fg sm:text-6xl">
@@ -88,14 +89,42 @@ export default function Hero() {
             </p>
           </div>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.75, ease: "easeOut", delay: 0.1 }}
+          className="relative z-[1] w-full shrink-0 lg:max-w-md"
+        >
+          <div className="card relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden p-0">
+            {photoOk ? (
+              <img
+                src="/api/hero-photo"
+                alt="Priyanshu Saini"
+                className="absolute inset-0 z-[1] h-full w-full object-cover object-[42%_center] scale-[1.20] motion-reduce:scale-100"
+                onError={() => setPhotoOk(false)}
+                loading="eager"
+                decoding="async"
+              />
+            ) : (
+              <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center gap-2 px-4 text-center">
+                <span className="text-3xl font-bold tracking-tight text-fg-muted">PS</span>
+                <span className="text-xs text-fg-muted">
+                  Add <code className="rounded bg-white/10 px-1.5 py-0.5">app/public/image.png</code> or{" "}
+                  <code className="rounded bg-white/10 px-1.5 py-0.5">public/hero.png</code>
+                </span>
+              </div>
+            )}
+          </div>
+        </motion.div>
       </div>
 
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 z-0"
         style={{
           background:
-            "radial-gradient(900px 400px at 20% 15%, rgba(99,102,241,0.18), transparent 55%), radial-gradient(700px 300px at 85% 30%, rgba(99,102,241,0.12), transparent 55%)"
+            "radial-gradient(900px 400px at 20% 15%, rgba(99,102,241,0.12), transparent 55%), radial-gradient(700px 300px at 85% 30%, rgba(99,102,241,0.08), transparent 55%)"
         }}
       />
     </section>
