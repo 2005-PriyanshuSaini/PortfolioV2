@@ -42,10 +42,10 @@ export async function POST(req: Request) {
       published: b.published ?? false
     }));
 
-    const out = await Promise.all(
-      rows.map(async (b) => {
+    const results = await sql.transaction((tx) =>
+      rows.map((b) => {
         if (b.id) {
-          const r = await sql`
+          return tx`
             INSERT INTO public.blogs (id, title, content, published)
             VALUES (${b.id}, ${b.title}, ${b.content}, ${b.published})
             ON CONFLICT (id) DO UPDATE SET
@@ -54,19 +54,18 @@ export async function POST(req: Request) {
               published = EXCLUDED.published
             RETURNING id, title, content, published, created_at
           `;
-          return (r?.[0] ?? null) as any;
         }
 
-        const r = await sql`
+        return tx`
           INSERT INTO public.blogs (title, content, published)
           VALUES (${b.title}, ${b.content}, ${b.published})
           RETURNING id, title, content, published, created_at
         `;
-        return (r?.[0] ?? null) as any;
       })
     );
 
-    return NextResponse.json({ success: true, blogs: out.filter(Boolean) });
+    const blogs = results.flatMap((r) => (Array.isArray(r) ? r : [])).filter(Boolean);
+    return NextResponse.json({ success: true, blogs });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });

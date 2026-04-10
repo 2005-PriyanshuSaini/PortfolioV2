@@ -48,10 +48,10 @@ export async function POST(req: Request) {
       featured: p.featured ?? false
     }));
 
-    const out = await Promise.all(
-      rows.map(async (p) => {
+    const results = await sql.transaction((tx) =>
+      rows.map((p) => {
         if (p.id) {
-          const r = await sql`
+          return tx`
             INSERT INTO public.projects (id, title, description, tech_stack, live_url, github_url, featured)
             VALUES (${p.id}, ${p.title}, ${p.description}, ${p.tech_stack}, ${p.live_url}, ${p.github_url}, ${p.featured})
             ON CONFLICT (id) DO UPDATE SET
@@ -63,19 +63,18 @@ export async function POST(req: Request) {
               featured = EXCLUDED.featured
             RETURNING id, title, description, tech_stack, live_url, github_url, featured, created_at
           `;
-          return (r?.[0] ?? null) as any;
         }
 
-        const r = await sql`
+        return tx`
           INSERT INTO public.projects (title, description, tech_stack, live_url, github_url, featured)
           VALUES (${p.title}, ${p.description}, ${p.tech_stack}, ${p.live_url}, ${p.github_url}, ${p.featured})
           RETURNING id, title, description, tech_stack, live_url, github_url, featured, created_at
         `;
-        return (r?.[0] ?? null) as any;
       })
     );
 
-    return NextResponse.json({ success: true, projects: out.filter(Boolean) });
+    const projects = results.flatMap((r) => (Array.isArray(r) ? r : [])).filter(Boolean);
+    return NextResponse.json({ success: true, projects });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });

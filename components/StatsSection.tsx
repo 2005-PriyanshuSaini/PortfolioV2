@@ -113,19 +113,11 @@ export default async function StatsSection() {
       ORDER BY synced_at DESC
     `;
     rows = (data ?? []) as StatsRow[];
-    if (rows.length === 0) {
+    if (rows.length === 0 && process.env.NODE_ENV === "development") {
       const c = await sql`SELECT count(*)::int as c FROM public.stats`;
-      const ident =
-        await sql`SELECT current_user as "user", current_database() as db, inet_server_addr()::text as addr`;
       console.log(
         "[StatsSection] stats rows=0, count(*)=",
-        c?.[0]?.c,
-        "db=",
-        ident?.[0]?.db,
-        "user=",
-        ident?.[0]?.user,
-        "addr=",
-        ident?.[0]?.addr
+        c?.[0]?.c
       );
     }
   } catch (err) {
