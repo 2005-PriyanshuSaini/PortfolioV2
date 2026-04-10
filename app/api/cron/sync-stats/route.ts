@@ -1,5 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { sql } from "../../../../lib/db";
 
 type GitHubUserResponse = {
   html_url: string;
@@ -22,20 +22,6 @@ const LEETCODE_QUERY = `query getUserProfile($username: String!) {
   }
   allQuestionsCount { difficulty count }
 }`;
-
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !(service || anon)) {
-    throw new Error("Missing Supabase env vars for cron sync");
-  }
-
-  return createClient(url, service ?? anon!, {
-    auth: { persistSession: false, autoRefreshToken: false }
-  });
-}
 
 function bearerFromHeader(authHeader: string | null) {
   if (!authHeader) return null;
@@ -135,15 +121,14 @@ export async function GET(req: Request) {
       medium_pct: Math.round((medium / denom) * 100),
       hard_pct: Math.round((hard / denom) * 100)
     };
-
-    const supabase = getAdminSupabase();
     const syncedAt = new Date().toISOString();
 
-    const { error } = await supabase.from("stats").insert([
-      { platform: "github", data: githubData, synced_at: syncedAt },
-      { platform: "leetcode", data: leetcodeData, synced_at: syncedAt }
-    ]);
-    if (error) throw error;
+    await sql`
+      INSERT INTO public.stats (platform, data, synced_at)
+      VALUES
+        ('github', ${JSON.stringify(githubData)}::jsonb, ${syncedAt}),
+        ('leetcode', ${JSON.stringify(leetcodeData)}::jsonb, ${syncedAt})
+    `;
 
     return NextResponse.json({ success: true, synced_at: syncedAt });
   } catch (err) {

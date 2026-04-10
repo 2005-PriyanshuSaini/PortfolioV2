@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/adminAuth";
-import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { sql } from "../../../../lib/db";
 
 type ProjectUpsert = {
   id?: string;
@@ -17,15 +17,13 @@ export async function GET(req: Request) {
   if (!auth.ok) return NextResponse.json({ success: false }, { status: 401 });
 
   try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("projects")
-      .select("id,title,description,tech_stack,live_url,github_url,featured,created_at")
-      .order("featured", { ascending: false })
-      .order("created_at", { ascending: false });
+    const rows = await sql`
+      SELECT id, title, description, tech_stack, live_url, github_url, featured, created_at
+      FROM public.projects
+      ORDER BY featured DESC, created_at DESC
+    `;
 
-    if (error) throw error;
-    return NextResponse.json({ success: true, projects: data ?? [] });
+    return NextResponse.json({ success: true, projects: (rows ?? []) as any[] });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -50,14 +48,34 @@ export async function POST(req: Request) {
       featured: p.featured ?? false
     }));
 
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("projects")
-      .upsert(rows, { onConflict: "id" })
-      .select("id,title,description,tech_stack,live_url,github_url,featured,created_at");
+    const out = await Promise.all(
+      rows.map(async (p) => {
+        if (p.id) {
+          const r = await sql`
+            INSERT INTO public.projects (id, title, description, tech_stack, live_url, github_url, featured)
+            VALUES (${p.id}, ${p.title}, ${p.description}, ${p.tech_stack}, ${p.live_url}, ${p.github_url}, ${p.featured})
+            ON CONFLICT (id) DO UPDATE SET
+              title = EXCLUDED.title,
+              description = EXCLUDED.description,
+              tech_stack = EXCLUDED.tech_stack,
+              live_url = EXCLUDED.live_url,
+              github_url = EXCLUDED.github_url,
+              featured = EXCLUDED.featured
+            RETURNING id, title, description, tech_stack, live_url, github_url, featured, created_at
+          `;
+          return (r?.[0] ?? null) as any;
+        }
 
-    if (error) throw error;
-    return NextResponse.json({ success: true, projects: data ?? [] });
+        const r = await sql`
+          INSERT INTO public.projects (title, description, tech_stack, live_url, github_url, featured)
+          VALUES (${p.title}, ${p.description}, ${p.tech_stack}, ${p.live_url}, ${p.github_url}, ${p.featured})
+          RETURNING id, title, description, tech_stack, live_url, github_url, featured, created_at
+        `;
+        return (r?.[0] ?? null) as any;
+      })
+    );
+
+    return NextResponse.json({ success: true, projects: out.filter(Boolean) });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });

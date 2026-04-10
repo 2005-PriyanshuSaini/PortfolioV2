@@ -1,6 +1,6 @@
 import * as React from "react";
 import { unstable_noStore as noStore } from "next/cache";
-import { getSupabaseServerClient } from "../lib/supabase";
+import { sql } from "../lib/db";
 import { getGitHubProfileUrl, getLeetCodeProfileUrl } from "../lib/links";
 
 function Bar({
@@ -102,20 +102,34 @@ function SkeletonWithLink({
 
 export default async function StatsSection() {
   noStore();
-  const supabase = getSupabaseServerClient();
   const fallbackGitHubUrl = getGitHubProfileUrl();
   const fallbackLeetCodeUrl = getLeetCodeProfileUrl();
 
   let rows: StatsRow[] = [];
   try {
-    const { data, error } = await supabase
-      .from("stats")
-      .select("id,platform,data,synced_at")
-      .order("synced_at", { ascending: false });
-
-    if (error) throw error;
+    const data = await sql`
+      SELECT id, platform, data, synced_at
+      FROM public.stats
+      ORDER BY synced_at DESC
+    `;
     rows = (data ?? []) as StatsRow[];
-  } catch {
+    if (rows.length === 0) {
+      const c = await sql`SELECT count(*)::int as c FROM public.stats`;
+      const ident =
+        await sql`SELECT current_user as "user", current_database() as db, inet_server_addr()::text as addr`;
+      console.log(
+        "[StatsSection] stats rows=0, count(*)=",
+        c?.[0]?.c,
+        "db=",
+        ident?.[0]?.db,
+        "user=",
+        ident?.[0]?.user,
+        "addr=",
+        ident?.[0]?.addr
+      );
+    }
+  } catch (err) {
+    console.error("[StatsSection] DB query failed", err);
     rows = [];
   }
 
