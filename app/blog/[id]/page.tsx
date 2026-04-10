@@ -1,6 +1,6 @@
 import Navbar from "../../../components/Navbar";
 import Footer from "../../../components/Footer";
-import { getSupabaseServerClient } from "../../../lib/supabase";
+import { sql } from "../../../lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 type BlogRow = {
@@ -20,20 +20,18 @@ function formatDate(iso: string | null) {
 
 export default async function BlogPostPage({ params }: { params: { id: string } }) {
   noStore();
-  const supabase = getSupabaseServerClient();
 
   let post: BlogRow | null = null;
   try {
-    const { data, error } = await supabase
-      .from("blogs")
-      .select("id,title,content,published,created_at")
-      .eq("id", params.id)
-      .eq("published", true)
-      .maybeSingle();
-
-    if (error) throw error;
-    post = data ?? null;
-  } catch {
+    const rows = await sql`
+      SELECT id, title, content, published, created_at
+      FROM public.blogs
+      WHERE id = ${params.id} AND published = true
+      LIMIT 1
+    `;
+    post = ((rows?.[0] ?? null) as BlogRow | null) ?? null;
+  } catch (err) {
+    console.error("[BlogPostPage] DB query failed", err);
     post = null;
   }
 

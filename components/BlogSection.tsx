@@ -1,6 +1,6 @@
 import * as React from "react";
 import { unstable_noStore as noStore } from "next/cache";
-import { getSupabaseServerClient } from "../lib/supabase";
+import { sql } from "../lib/db";
 
 type BlogRow = {
   id: string;
@@ -19,19 +19,18 @@ function formatDate(iso: string | null) {
 
 export default async function BlogSection() {
   noStore();
-  const supabase = getSupabaseServerClient();
 
   let posts: BlogRow[] = [];
   try {
-    const { data, error } = await supabase
-      .from("blogs")
-      .select("id,title,content,published,created_at")
-      .eq("published", true)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    posts = data ?? [];
-  } catch {
+    const rows = await sql`
+      SELECT id, title, content, published, created_at
+      FROM public.blogs
+      WHERE published = true
+      ORDER BY created_at DESC
+    `;
+    posts = (rows ?? []) as BlogRow[];
+  } catch (err) {
+    console.error("[BlogSection] DB query failed", err);
     posts = [];
   }
 

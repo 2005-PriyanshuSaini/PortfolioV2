@@ -1,6 +1,6 @@
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { getSupabaseServerClient } from "../../lib/supabase";
+import { sql } from "../../lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 type ProjectRow = {
@@ -16,19 +16,32 @@ type ProjectRow = {
 
 export default async function ProjectsPage() {
   noStore();
-  const supabase = getSupabaseServerClient();
 
   let projects: ProjectRow[] = [];
   try {
-    const { data, error } = await supabase
-      .from("projects")
-      .select("id,title,description,tech_stack,live_url,github_url,featured,created_at")
-      .order("featured", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    projects = data ?? [];
-  } catch {
+    const rows = await sql`
+      SELECT id, title, description, tech_stack, live_url, github_url, featured, created_at
+      FROM public.projects
+      ORDER BY featured DESC, created_at DESC
+    `;
+    projects = (rows ?? []) as ProjectRow[];
+    if (projects.length === 0) {
+      const c = await sql`SELECT count(*)::int as c FROM public.projects`;
+      const ident =
+        await sql`SELECT current_user as "user", current_database() as db, inet_server_addr()::text as addr`;
+      console.log(
+        "[ProjectsPage] projects rows=0, count(*)=",
+        c?.[0]?.c,
+        "db=",
+        ident?.[0]?.db,
+        "user=",
+        ident?.[0]?.user,
+        "addr=",
+        ident?.[0]?.addr
+      );
+    }
+  } catch (err) {
+    console.error("[ProjectsPage] DB query failed", err);
     projects = [];
   }
 

@@ -1,0 +1,14 @@
+name: Keep Database Alive
+
+on:
+  schedule:
+    - cron: '0 9 * * 1,4'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Keep-alive (Neon)
+        run: |
+          echo "Neon does not require Supabase REST keep-alive."

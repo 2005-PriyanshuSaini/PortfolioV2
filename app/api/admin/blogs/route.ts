@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "../../../../lib/adminAuth";
-import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { sql } from "../../../../lib/db";
 
 type BlogUpsert = {
   id?: string;
@@ -14,14 +14,13 @@ export async function GET(req: Request) {
   if (!auth.ok) return NextResponse.json({ success: false }, { status: 401 });
 
   try {
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("blogs")
-      .select("id,title,content,published,created_at")
-      .order("created_at", { ascending: false });
+    const rows = await sql`
+      SELECT id, title, content, published, created_at
+      FROM public.blogs
+      ORDER BY created_at DESC
+    `;
 
-    if (error) throw error;
-    return NextResponse.json({ success: true, blogs: data ?? [] });
+    return NextResponse.json({ success: true, blogs: (rows ?? []) as any[] });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
@@ -43,14 +42,30 @@ export async function POST(req: Request) {
       published: b.published ?? false
     }));
 
-    const supabase = getSupabaseAdmin();
-    const { data, error } = await supabase
-      .from("blogs")
-      .upsert(rows, { onConflict: "id" })
-      .select("id,title,content,published,created_at");
+    const results = await sql.transaction((tx) =>
+      rows.map((b) => {
+        if (b.id) {
+          return tx`
+            INSERT INTO public.blogs (id, title, content, published)
+            VALUES (${b.id}, ${b.title}, ${b.content}, ${b.published})
+            ON CONFLICT (id) DO UPDATE SET
+              title = EXCLUDED.title,
+              content = EXCLUDED.content,
+              published = EXCLUDED.published
+            RETURNING id, title, content, published, created_at
+          `;
+        }
 
-    if (error) throw error;
-    return NextResponse.json({ success: true, blogs: data ?? [] });
+        return tx`
+          INSERT INTO public.blogs (title, content, published)
+          VALUES (${b.title}, ${b.content}, ${b.published})
+          RETURNING id, title, content, published, created_at
+        `;
+      })
+    );
+
+    const blogs = results.flatMap((r) => (Array.isArray(r) ? r : [])).filter(Boolean);
+    return NextResponse.json({ success: true, blogs });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ success: false, error: message }, { status: 500 });

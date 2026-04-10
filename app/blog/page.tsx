@@ -1,6 +1,6 @@
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
-import { getSupabaseServerClient } from "../../lib/supabase";
+import { sql } from "../../lib/db";
 import { unstable_noStore as noStore } from "next/cache";
 
 type BlogRow = {
@@ -20,19 +20,36 @@ function formatDate(iso: string | null) {
 
 export default async function BlogPage() {
   noStore();
-  const supabase = getSupabaseServerClient();
 
   let posts: BlogRow[] = [];
   try {
-    const { data, error } = await supabase
-      .from("blogs")
-      .select("id,title,content,published,created_at")
-      .eq("published", true)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    posts = data ?? [];
-  } catch {
+    const rows = await sql`
+      SELECT id, title, content, published, created_at
+      FROM public.blogs
+      WHERE published = true
+      ORDER BY created_at DESC
+    `;
+    posts = (rows ?? []) as BlogRow[];
+    if (posts.length === 0) {
+      const cAll = await sql`SELECT count(*)::int as c FROM public.blogs`;
+      const cPub = await sql`SELECT count(*)::int as c FROM public.blogs WHERE published = true`;
+      const ident =
+        await sql`SELECT current_user as "user", current_database() as db, inet_server_addr()::text as addr`;
+      console.log(
+        "[BlogPage] published rows=0, count(all)=",
+        cAll?.[0]?.c,
+        "count(published)=",
+        cPub?.[0]?.c,
+        "db=",
+        ident?.[0]?.db,
+        "user=",
+        ident?.[0]?.user,
+        "addr=",
+        ident?.[0]?.addr
+      );
+    }
+  } catch (err) {
+    console.error("[BlogPage] DB query failed", err);
     posts = [];
   }
 

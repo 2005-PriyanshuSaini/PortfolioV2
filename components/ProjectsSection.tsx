@@ -1,6 +1,6 @@
 import * as React from "react";
 import { unstable_noStore as noStore } from "next/cache";
-import { getSupabaseServerClient } from "../lib/supabase";
+import { sql } from "../lib/db";
 
 type ProjectRow = {
   id: string;
@@ -15,19 +15,17 @@ type ProjectRow = {
 
 export default async function ProjectsSection() {
   noStore();
-  const supabase = getSupabaseServerClient();
 
   let projects: ProjectRow[] = [];
   try {
-    const { data, error } = await supabase
-      .from("projects")
-      .select("id,title,description,tech_stack,live_url,github_url,featured,created_at")
-      .order("featured", { ascending: false })
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    projects = data ?? [];
-  } catch {
+    const rows = await sql`
+      SELECT id, title, description, tech_stack, live_url, github_url, featured, created_at
+      FROM public.projects
+      ORDER BY featured DESC, created_at DESC
+    `;
+    projects = (rows ?? []) as ProjectRow[];
+  } catch (err) {
+    console.error("[ProjectsSection] DB query failed", err);
     projects = [];
   }
 
