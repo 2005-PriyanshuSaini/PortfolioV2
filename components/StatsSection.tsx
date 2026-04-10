@@ -2,6 +2,7 @@ import * as React from "react";
 import { unstable_noStore as noStore } from "next/cache";
 import { sql } from "../lib/db";
 import { getGitHubProfileUrl, getLeetCodeProfileUrl } from "../lib/links";
+import { syncStatsNow } from "../lib/syncStats";
 
 function Bar({
   label,
@@ -107,6 +108,9 @@ export default async function StatsSection() {
 
   let rows: StatsRow[] = [];
   try {
+    // Refresh stats on every visit/render (best-effort).
+    await syncStatsNow().catch(() => null);
+
     const data = await sql`
       SELECT id, platform, data, synced_at
       FROM public.stats
