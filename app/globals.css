@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg text-fg antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.28);
+}
+
+.container-page {
+  @apply mx-auto w-full max-w-6xl px-5;
+}
+
+.card {
+  @apply rounded-2xl border border-border bg-bg-card/70 backdrop-blur;
+}
+
+.section {
+  @apply py-16 md:py-20;
+}
+
+.section-title {
+  @apply text-3xl font-semibold tracking-tight;
+}
+
+.section-subtitle {
+  @apply mt-2 text-fg-muted;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition;
+}
+
+.btn-primary {
+  @apply bg-accent text-white hover:bg-accent/90 active:bg-accent/85;
+}
+
+.btn-secondary {
+  @apply border border-border bg-white/0 text-fg hover:bg-white/5 active:bg-white/10;
+}
+
+.tag {
+  @apply inline-flex items-center rounded-full border border-border bg-white/5 px-3 py-1 text-xs font-medium text-fg;
+}
+
+.piano {
+  @apply relative w-full max-w-3xl select-none;
+  touch-action: none;
+}
+
+.piano-white-row {
+  @apply flex w-full overflow-hidden rounded-2xl border border-border bg-white/0;
+}
+
+.piano-white-key {
+  @apply relative flex-1 cursor-pointer border-r border-border bg-[#f2f2f2] transition-transform;
+  height: clamp(150px, 18vw, 220px);
+}
+
+.piano-white-key:last-child {
+  border-right: 0;
+}
+
+.piano-black-key {
+  @apply absolute top-0 z-10 cursor-pointer rounded-b-xl bg-[#111111] transition-transform;
+  width: calc(100% / 12);
+  height: clamp(95px, 11vw, 140px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55);
+}
+
+.piano-key-label {
+  @apply absolute bottom-3 left-1/2 -translate-x-1/2 text-xs font-semibold text-black/55;
+}
+
+.piano-white-key:hover,
+.piano-black-key:hover {
+  transform: translateY(-2px);
+}
+
+.piano-white-key[data-active="true"],
+.piano-black-key[data-active="true"] {
+  transform: translateY(2px);
+}
+
