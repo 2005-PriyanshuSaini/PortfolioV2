@@ -130,7 +130,7 @@ export default async function StatsSection() {
   const isEmpty = rows.length === 0;
 
   return (
-    <section id="stats" className="bg-bg section" style={{ scrollMarginTop: 88 }}>
+    <section id="stats" className="section-frosted section" style={{ scrollMarginTop: 88 }}>
       <div className="container-page">
         <h2 className="section-title">By the numbers</h2>
         <p className="section-subtitle">A quick snapshot across code and problem solving.</p>

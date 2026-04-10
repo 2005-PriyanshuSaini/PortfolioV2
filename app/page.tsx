@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
-    <main className="min-h-dvh bg-bg text-fg">
+    <main className="min-h-dvh text-fg">
       <Navbar />
       <Hero />
       <ProjectsSection />

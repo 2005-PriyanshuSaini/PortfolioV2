@@ -32,12 +32,14 @@ export default async function ProjectsSection() {
   }
 
   return (
-    <section id="projects" className="bg-bg section" style={{ scrollMarginTop: 88 }}>
+    <section id="projects" className="section-frosted section" style={{ scrollMarginTop: 88 }}>
       <div className="container-page">
         <div className="flex items-end justify-between gap-6">
           <div>
             <h2 className="section-title">Things I&apos;ve Built</h2>
-            <p className="section-subtitle">Same projects you manage in /admin (Supabase).</p>
+            <p className="section-subtitle">
+              Production-ready work — APIs, interfaces, and systems built to ship and scale.
+            </p>
           </div>
         </div>
 

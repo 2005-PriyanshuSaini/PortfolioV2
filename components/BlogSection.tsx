@@ -36,12 +36,14 @@ export default async function BlogSection() {
   }
 
   return (
-    <section id="blog" className="bg-bg section" style={{ scrollMarginTop: 88 }}>
+    <section id="blog" className="section-frosted section" style={{ scrollMarginTop: 88 }}>
       <div className="container-page">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="section-title">Dev Log</h2>
-            <p className="section-subtitle">Same published posts you manage in /admin.</p>
+            <p className="section-subtitle">
+              Deep dives on engineering, AI in practice, and lessons from real releases.
+            </p>
           </div>
           <a className="text-sm font-semibold text-accent hover:text-accent/90" href="/blog">
             View all →

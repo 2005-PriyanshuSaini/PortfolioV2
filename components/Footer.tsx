@@ -31,7 +31,7 @@ export default function Footer() {
   const xUrl = getXUrl();
   const email = getContactEmail();
   return (
-    <footer id="contact" className="bg-bg section" style={{ scrollMarginTop: 88 }}>
+    <footer id="contact" className="section-frosted section" style={{ scrollMarginTop: 88 }}>
       <div className="container-page">
         <div className="card flex flex-col items-start justify-between gap-4 p-6 md:flex-row md:items-center">
           {email ? (
